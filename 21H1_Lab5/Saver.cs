@@ -16,7 +16,7 @@ namespace _21H1_Lab5 {
 		// Після заголовку далі йдуть безпосередньо елементи матриці.
 		// Кожен такий елемент є 32-розрядним цілим зі знаком і займає
 
-		const int number_of_ptrs = 12;
+		const int number_of_ptrs = 16;
 		const int ptr_table_size = sizeof(ushort) * number_of_ptrs;
 		//const int arr_max_size = 20;
 		// Розмір файлу буде 65536 байт.
@@ -45,7 +45,7 @@ namespace _21H1_Lab5 {
 		~Saver() => CloseFile();
 
 		static int SizeOfMatrix(int rows, int columns)
-			=> 2 + sizeof(int) * rows * columns;
+			=> 2 + sizeof(double) * rows * columns;
 
 		// Кількість матриць у файлі.
 		// Якщо значення дорівнює -1, це означає,
@@ -147,7 +147,7 @@ namespace _21H1_Lab5 {
 				Matrix matrix = new(rows, cols);
 				for(int i = 0; i < rows; i++) {
 					for(int j = 0; j < cols; j++) {
-						matrix[i, j] = reader.ReadInt32();
+						matrix[i, j] = reader.ReadDouble();
 					}
 				}
 

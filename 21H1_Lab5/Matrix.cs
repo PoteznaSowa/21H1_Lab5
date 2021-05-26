@@ -2,13 +2,13 @@
 
 namespace _21H1_Lab5 {
 	class Matrix {
-		readonly int[,] matrix;  // Безпосередньо сам вміст матриці.
+		readonly double[,] matrix;  // Безпосередньо сам вміст матриці.
 		readonly Random _rng = new(0);
 
 		public int Rows => matrix.GetLength(0);
 		public int Columns => matrix.GetLength(1);
 
-		public int this[int row, int col] {
+		public double this[int row, int col] {
 			get => matrix[row, col];
 			set => matrix[row, col] = value;
 		}
@@ -23,7 +23,7 @@ namespace _21H1_Lab5 {
 				throw new ArgumentOutOfRangeException(nameof(columns));
 			}
 
-			matrix = new int[rows, columns];
+			matrix = new double[rows, columns];
 		}
 
 		public void Randomize() {
@@ -56,10 +56,10 @@ namespace _21H1_Lab5 {
 
 			return result;
 		}
-		static int ScalarProduct(Matrix a, Matrix b, int row, int column) {
+		static double ScalarProduct(Matrix a, Matrix b, int row, int column) {
 			// Обчислити скалярний добуток
 			// вектор-рядків матриці A та вектор-стовпців матриці B.
-			int result = 0;
+			double result = 0;
 			for(int i = 0; i < a.matrix.GetLength(0); i++) {
 				result += a.matrix[row, i] * b.matrix[i, column];
 			}
@@ -67,80 +67,67 @@ namespace _21H1_Lab5 {
 			return result;
 		}
 
-		public int Determinant() {
-			int size = matrix.GetLength(0);
-			return size != matrix.GetLength(1)
-				? throw new InvalidOperationException(
-					"Матриця не є квадратною, тому вона не має визначника."
-					)
-				: DeterminantOfMatrix(matrix, size, size);
-		}
-		static int DeterminantOfMatrix(int[,] mat, int n, int size) {
-			int[,] A = mat;
+		static unsafe double Det(double* rmX, int n) {
+			double* mtx_u_ii;
+			double* mtx_ii_j;
+			double* mtx_end = rmX + n * (n - 1);
+			double* mtx_u_ii_j = null;
+			double val;
+			double det = 1;
+			int d = 0;
 
-			// Base cases
-			switch(n) {
-			case 1:
-				return A[0, 0];
-			case 2:
-				return A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0];
-			case 3:
-				return 0
-					+ A[0, 0] * A[1, 1] * A[2, 2]
-					+ A[1, 0] * A[2, 1] * A[0, 2]
-					+ A[2, 0] * A[0, 1] * A[1, 2]
+			// rmX указывает на (i,i) элемент на каждом шаге и называется ведущим
+			for(double* mtx_ii_end = rmX + n; rmX < mtx_end; rmX += n + 1, mtx_ii_end += n, d++) {
+				// Ищем максимальный элемент в столбце(под ведущим) 
 
-					- A[2, 0] * A[1, 1] * A[0, 2]
-					- A[2, 1] * A[1, 2] * A[0, 0]
-					- A[2, 2] * A[1, 0] * A[0, 1]
-					;
-			}
-
-			int D = 0; // Initialize result
-
-			// To store cofactors
-			int[,] temp = new int[size, size];
-
-			// To store sign multiplier
-			int sign = 1;
-
-			// Iterate for each element
-			// of first row
-			for(int f = 0; f < n; f++) {
-				// Getting Cofactor of mat[0][f]
-				GetCofactor(mat, temp, 0, f, n);
-				D += sign * mat[0, f]
-					 * DeterminantOfMatrix(temp, n - 1, size);
-
-				// terms are to be added with
-				// alternate sign
-				sign = -sign;
-			}
-			return D;
-		}
-		static void GetCofactor(int[,] mat, int[,] temp, int p, int q, int n) {
-			int i = 0, j = 0;
-
-			// Looping for each element of
-			// the matrix
-			for(int row = 0; row < n; row++) {
-				for(int col = 0; col < n; col++) {
-
-					// Copying into temporary matrix
-					// only those element which are
-					// not in given row and column
-					if(row != p && col != q) {
-						temp[i, j++] = mat[row, col];
-
-						// Row is filled, so increase
-						// row index and reset col
-						// index
-						if(j == n - 1) {
-							j = 0;
-							i++;
-						}
+				//Ищем максимальный элемент и его позицию
+				val = Math.Abs(*(mtx_ii_j = rmX));
+				for(mtx_u_ii = rmX + n; mtx_u_ii < mtx_end; mtx_u_ii += n) {
+					if(val < Math.Abs(*mtx_u_ii)) {
+						val = Math.Abs(*(mtx_ii_j = mtx_u_ii));
 					}
 				}
+
+				if(val == 0) {
+					//Если максимальный эдемент = 0 -> матрица вырожденная
+					return double.NaN;
+				} else if(mtx_ii_j != rmX) {
+					//Если ведущий элемент не является максимальным -
+					//делаем перестановку строк и меняем знак определителя
+					det = -det;
+					for(mtx_u_ii = rmX; mtx_u_ii < mtx_ii_end; mtx_ii_j++, mtx_u_ii++) {
+						val = *mtx_u_ii;
+						*mtx_u_ii = *mtx_ii_j;
+						*mtx_ii_j = val;
+					}
+				}
+
+				//Обнуляем элементы под ведущим
+				for(mtx_u_ii = rmX + n, mtx_u_ii_j = mtx_end + n; mtx_u_ii < mtx_u_ii_j; mtx_u_ii += d) {
+					val = *(mtx_u_ii++) / *rmX;
+					for(mtx_ii_j = rmX + 1; mtx_ii_j < mtx_ii_end; mtx_u_ii++, mtx_ii_j++) {
+						*mtx_u_ii -= *mtx_ii_j * val;
+					}
+				}
+				det *= *rmX;
+			}
+			return det *= *rmX;
+		}
+		public double Determinant() {
+			return Determinant(matrix);
+		}
+		static unsafe double Determinant(double[,] matrix) {
+			int n = matrix.GetLength(0);
+			if(n != matrix.GetLength(1)) {
+				throw new InvalidOperationException(
+					"Матриця не є квадратною, тому вона не має визначника."
+					);
+			}
+
+			double[] temp = new double[matrix.Length];
+			Buffer.BlockCopy(matrix, 0, temp, 0, temp.Length * sizeof(double));
+			fixed(double* pm = &temp[0]) {
+				return Det(pm, n);
 			}
 		}
 
@@ -158,66 +145,53 @@ namespace _21H1_Lab5 {
 		}
 
 		public Matrix GetInverse() {
-			int rows = matrix.GetLength(0);
-			int columns = matrix.GetLength(1);
-			if(rows != columns) {
+			int m = matrix.GetLength(0);
+			int n = matrix.GetLength(1);
+			if(m != n) {
 				throw new InvalidOperationException(message:
 					"Обернену матрицю можна зробити тільки з квадратної."
 					);
 			}
 
-			int N = rows;
+			double det = Determinant();
 
-			// Find determinant of [,]A
-			int det = Determinant();
 			if(det == 0) {
-				throw new InvalidOperationException(message:
-					"Визначник матриці дорівнює нулю. Не можна знайти обернену матрицю."
-					);
+				return null;
 			}
 
-			int[,] A = matrix;
-			Matrix result = new(rows, columns);
-			int[,] inverse = result.matrix;
+			Matrix transposed = GetTranspose();
+			Matrix DetMat = new(n, n);
+			int size = matrix.GetLength(0);
+			for(int i = 0; i < n; i++) {
+				for(int j = 0; j < n; j++) {
+					double[,] smallMatrix = new double[size - 1, size - 1];
 
-			// Find adjoint
-			int[,] adj = new int[N, N];
-			Adjoint(A, adj);
+					int row = 0;
+					int col = 0;
+					for(int k = 0; k < size; k++) {
+						for(int l = 0; l < size; l++) {
+							if(k == i || l == j) {
+								continue;
+							}
 
-			// Find Inverse using formula "inverse(A) = adj(A)/det(A)"
-			for(int i = 0; i < N; i++) {
-				for(int j = 0; j < N; j++) {
-					inverse[i, j] = adj[i, j] / det;
+							smallMatrix[row, col] = transposed.matrix[k, l];
+							col++;
+						}
+						if(col == smallMatrix.GetLength(0)) {
+							row++;
+							col = 0;
+						}
+					}
+
+					DetMat.matrix[i, j] =
+						(((i - j) & 1) == 0  // Перевірка парності суми номера рядка та номера стовпця.
+						? Determinant(smallMatrix)
+						: -Determinant(smallMatrix))
+						/ det;
 				}
 			}
 
-			return result;
-		}
-		// Function to get adjoint of A[N,N] in adj[N,N].
-		static void Adjoint(int[,] A, int[,] adj) {
-			int N = A.GetLength(0);
-			if(N == 1) {
-				adj[0, 0] = 1;
-				return;
-			}
-
-			// temp is used to store cofactors of [,]A
-			int[,] temp = new int[N, N];
-
-			for(int i = 0; i < N; i++) {
-				for(int j = 0; j < N; j++) {
-					// Get cofactor of A[i,j]
-					GetCofactor(A, temp, i, j, N);
-
-					// sign of adj[j,i] positive if sum of row
-					// and column indexes is even.
-					int sign = (((i + j) & 1) == 0) ? 1 : -1;
-
-					// Interchanging rows and columns to get the
-					// transpose of the cofactor matrix
-					adj[j, i] = sign * DeterminantOfMatrix(temp, N - 1, N);
-				}
-			}
+			return DetMat;
 		}
 	}
 }

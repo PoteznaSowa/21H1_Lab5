@@ -1,6 +1,7 @@
 ﻿using System;
 
 using _21H1_Lab5;
+
 // Уперше: програма без методу Main!
 Matrix m1 = new(20, 20);
 m1.Randomize();
@@ -22,12 +23,11 @@ saver.Add(m4);
 saver.Add(m5);
 Matrix dets = new(1, 5);
 
-// TODO: переробити алгоритм пошуку визначника.
-//dets[0, 0] = m1.Determinant();
-//dets[0, 1] = m2.Determinant();
-//dets[0, 2] = m3.Determinant();
-//dets[0, 3] = m4.Determinant();
-//dets[0, 4] = m5.Determinant();
+dets[0, 0] = m1.Determinant();
+dets[0, 1] = m2.Determinant();
+dets[0, 2] = m3.Determinant();
+dets[0, 3] = m4.Determinant();
+dets[0, 4] = m5.Determinant();
 saver.Add(dets);
 
 m1 *= m2;
@@ -39,7 +39,8 @@ saver.Add(m1);
 m1 *= m5;
 saver.Add(m1);
 
-//Matrix inv = m1.GetInverse();
+saver.Add(m1.GetInverse());
+
 m1 = new(10, 10);
 m1.Randomize();
 saver[0] = m1;
