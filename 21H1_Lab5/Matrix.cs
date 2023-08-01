@@ -2,7 +2,7 @@
 
 namespace _21H1_Lab5 {
 	class Matrix {
-		readonly double[,] matrix;  // Безпосередньо сам вміст матриці.
+		readonly double[,] matrix;
 		readonly Random _rng = new(0);
 
 		public int Rows => matrix.GetLength(0);
@@ -14,8 +14,6 @@ namespace _21H1_Lab5 {
 		}
 
 		public Matrix(int rows, int columns) {
-			// Матриці не повинні бути або нульового або
-			// від'ємного розміру, або занадто великі.
 			if(rows is < 1 or > 20) {
 				throw new ArgumentOutOfRangeException(nameof(rows));
 			}
@@ -27,7 +25,6 @@ namespace _21H1_Lab5 {
 		}
 
 		public void Randomize() {
-			// Заповнити числами від -1 до 1 включно.
 			for(int i = 0; i < matrix.GetLength(0); i++) {
 				for(int j = 0; j < matrix.GetLength(1); j++) {
 					matrix[i, j] = _rng.Next(-1, 2);
@@ -36,7 +33,6 @@ namespace _21H1_Lab5 {
 		}
 
 		public static Matrix operator *(Matrix left, Matrix right) {
-			// Знайти добуток матриць.
 			int l_cols = left.matrix.GetLength(1);
 			int r_rows = right.matrix.GetLength(0);
 			if(l_cols != r_rows) {
@@ -57,8 +53,6 @@ namespace _21H1_Lab5 {
 			return result;
 		}
 		static double ScalarProduct(Matrix a, Matrix b, int row, int column) {
-			// Обчислити скалярний добуток
-			// вектор-рядків матриці A та вектор-стовпців матриці B.
 			double result = 0;
 			for(int i = 0; i < a.matrix.GetLength(0); i++) {
 				result += a.matrix[row, i] * b.matrix[i, column];
@@ -76,11 +70,7 @@ namespace _21H1_Lab5 {
 			double det = 1;
 			int d = 0;
 
-			// rmX указывает на (i,i) элемент на каждом шаге и называется ведущим
 			for(double* mtx_ii_end = rmX + n; rmX < mtx_end; rmX += n + 1, mtx_ii_end += n, d++) {
-				// Ищем максимальный элемент в столбце(под ведущим) 
-
-				//Ищем максимальный элемент и его позицию
 				val = Math.Abs(*(mtx_ii_j = rmX));
 				for(mtx_u_ii = rmX + n; mtx_u_ii < mtx_end; mtx_u_ii += n) {
 					if(val < Math.Abs(*mtx_u_ii)) {
@@ -89,11 +79,8 @@ namespace _21H1_Lab5 {
 				}
 
 				if(val == 0) {
-					//Если максимальный эдемент = 0 -> матрица вырожденная
 					return double.NaN;
 				} else if(mtx_ii_j != rmX) {
-					//Если ведущий элемент не является максимальным -
-					//делаем перестановку строк и меняем знак определителя
 					det = -det;
 					for(mtx_u_ii = rmX; mtx_u_ii < mtx_ii_end; mtx_ii_j++, mtx_u_ii++) {
 						val = *mtx_u_ii;
@@ -102,7 +89,6 @@ namespace _21H1_Lab5 {
 					}
 				}
 
-				//Обнуляем элементы под ведущим
 				for(mtx_u_ii = rmX + n, mtx_u_ii_j = mtx_end + n; mtx_u_ii < mtx_u_ii_j; mtx_u_ii += d) {
 					val = *(mtx_u_ii++) / *rmX;
 					for(mtx_ii_j = rmX + 1; mtx_ii_j < mtx_ii_end; mtx_u_ii++, mtx_ii_j++) {
@@ -184,7 +170,7 @@ namespace _21H1_Lab5 {
 					}
 
 					DetMat.matrix[i, j] =
-						(((i - j) & 1) == 0  // Перевірка парності суми номера рядка та номера стовпця.
+						(((i - j) & 1) == 0
 						? Determinant(smallMatrix)
 						: -Determinant(smallMatrix))
 						/ det;
