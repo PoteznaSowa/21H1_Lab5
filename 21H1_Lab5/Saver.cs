@@ -3,23 +3,10 @@ using System.IO;
 
 namespace _21H1_Lab5 {
 	class Saver {
-		// === Структура файлу з матрицями ===
-		// 0x00000 -- 0x00017: таблиця вказівників
-		// 0x00018 -- ...: безпосередньо самі дані
-		// Вказівник представлений у вигляді 16-розрядного беззнакового цілого.
-		// Якщо вказівник дорівнює нулю, матриця за вказаним номером відсутня.
-
-		// === Структура матриці у файлі ===
-		// Матриця містить заголовок із 2 байтів.
-		// Перший байт заголовку представляє кількість рядків і дорівнює M.
-		// Другий байт — кількість стовпців і дорівнює N.
-		// Після заголовку далі йдуть безпосередньо елементи матриці.
-		// Кожен такий елемент є 32-розрядним цілим зі знаком і займає
-
 		const int number_of_ptrs = 16;
 		const int ptr_table_size = sizeof(ushort) * number_of_ptrs;
 		//const int arr_max_size = 20;
-		// Розмір файлу буде 65536 байт.
+
 		const int file_size = ptr_table_size;
 
 		static Saver _instance = null;
@@ -40,16 +27,13 @@ namespace _21H1_Lab5 {
 			}
 		}
 
-		public Saver() => Count = -1;  // -1 означає невизначений стан об'єкта.
+		public Saver() => Count = -1;
 
 		~Saver() => CloseFile();
 
 		static int SizeOfMatrix(int rows, int columns)
 			=> 2 + sizeof(double) * rows * columns;
 
-		// Кількість матриць у файлі.
-		// Якщо значення дорівнює -1, це означає,
-		// що файл з матрицями ще не завантажено.
 		public int Count {
 			get; private set;
 		}
@@ -86,7 +70,6 @@ namespace _21H1_Lab5 {
 				return true;
 			}
 
-			// size - розмір матриці всередині файлу.
 			int size = SizeOfMatrix(matrix.Rows, matrix.Columns);
 			_file.Position = 0;
 			BinaryReader reader = new(_file);
@@ -105,7 +88,6 @@ namespace _21H1_Lab5 {
 					_file.Position = newptr;
 					newptr += SizeOfMatrix(reader.ReadByte(), reader.ReadByte());
 				}
-				// Перевірити, якщо наша матриця влізе.
 				if(i == Count || newptr + size <= ptrs[i + 1]) {
 					break;
 				}
@@ -114,7 +96,6 @@ namespace _21H1_Lab5 {
 			return true;
 		}
 		void WriteToFile(Matrix matrix, int num, int ptr) {
-			// Записати матрицю в зазначене місце у файлі.
 			_file.Position = num << 1;
 			BinaryWriter writer = new(_file);
 			writer.Write((ushort)ptr);
@@ -128,8 +109,6 @@ namespace _21H1_Lab5 {
 					writer.Write(matrix[i, j]);
 				}
 			}
-			// Очищати буфер після запису у файл, інакше деякі
-			// наступні запити на запис може бути пропущено системою.
 			_file.Flush();
 		}
 
@@ -138,7 +117,6 @@ namespace _21H1_Lab5 {
 				if(number >= Count || number >= number_of_ptrs) {
 					throw new ArgumentOutOfRangeException(nameof(number));
 				}
-				// Отримати матрицю за вказаним номером.
 				_file.Position = number << 1;
 				BinaryReader reader = new(_file);
 				_file.Position = reader.ReadUInt16();
@@ -157,7 +135,6 @@ namespace _21H1_Lab5 {
 				if(number >= Count || number >= number_of_ptrs) {
 					throw new ArgumentOutOfRangeException(nameof(number));
 				}
-				// Замінити зазначену матрицю іншою.
 				int rows = value.Rows;
 				int cols = value.Columns;
 				int size = SizeOfMatrix(rows, cols);
@@ -206,7 +183,6 @@ namespace _21H1_Lab5 {
 		}
 
 		public void Defragment() {
-			// Видалити з файлу порожні місця.
 			byte[][] arrays = new byte[Count][];
 			int[] ptrs = new int[Count];
 			BinaryReader reader = new(_file);
@@ -239,7 +215,6 @@ namespace _21H1_Lab5 {
 		}
 
 		public void Clear() {
-			// Очистити таблицю вказівників.
 			_file.Position = 0;
 			_file.SetLength(file_size);
 			_file.Write(new byte[sizeof(ushort) * number_of_ptrs]);
