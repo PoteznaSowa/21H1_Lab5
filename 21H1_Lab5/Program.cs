@@ -2,7 +2,6 @@
 
 using _21H1_Lab5;
 
-// Уперше: програма без методу Main!
 Matrix m1 = new(20, 20);
 m1.Randomize();
 Matrix m2 = new(20, 20);
